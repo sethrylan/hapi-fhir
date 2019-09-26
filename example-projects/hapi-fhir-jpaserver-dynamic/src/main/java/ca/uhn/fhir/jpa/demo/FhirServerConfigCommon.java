@@ -53,7 +53,7 @@ public class FhirServerConfigCommon {
 	 * A URL to a remote database could also be placed here, along with login credentials and other properties supported by BasicDataSource.
 	 */
 	public static DataSource getDataSource(Environment env) {
-		String dbUrl = (env.getProperty(Utils.DB_URL) != null)?env.getProperty(Utils.DB_URL).toLowerCase():"";
+		String dbUrl = (env.getProperty(Utils.DB_URL) != null)?env.getProperty(Utils.DB_URL):"";
 		String herokuDbUrl = env.getProperty(Utils.HEROKU_DATABASE_URL);
 		
 		if(herokuDbUrl != null) {
@@ -132,7 +132,12 @@ public class FhirServerConfigCommon {
 		if(dbUrl != null && dbUrl.indexOf("mysql") > -1) {
 			extraProperties.put("hibernate.dialect", org.hibernate.dialect.MySQL5Dialect.class.getName());
 			extraProperties.put("hibernate.dialect.storage_engine","innodb");
-		} 
+		}
+		if(dbUrl != null && dbUrl.indexOf("oracle") > -1) {
+			extraProperties.put("hibernate.dialect", ca.uhn.fhir.jpa.demo.Oracle10gDialectExtended.class.getName());  // workaround for "found [float (Types#FLOAT)], but expecting [double precision (Types#DOUBLE)]"
+			extraProperties.put("spring.datasource.driver-class-name", "oracle.jdbc.OracleDriver");
+			extraProperties.put("spring.jpa.database-platform", org.hibernate.dialect.Oracle10gDialect.class.getName()); // workaround for "org.hibernate.HibernateException: Access to DialectResolutionInfo cannot be null when 'hibernate.dialect' not set" when using custom dialect class
+		}
 		else if(dbUrl != null && dbUrl.indexOf("postgres") > -1) {
 			extraProperties.put("hibernate.dialect", org.hibernate.dialect.PostgreSQL9Dialect.class.getName());
 		} 
